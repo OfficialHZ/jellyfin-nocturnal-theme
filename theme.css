@@ -1,1 +1,2629 @@
-   /* Nocturnal theme for Jellyfin */
+/* ==========================================================
+   Nocturnal — a dark, night-inspired theme for Jellyfin
+   https://github.com/YOUR-USER/jellyfin-nocturnal-theme
+   ==========================================================
+
+   TABLE OF CONTENTS
+   00. Fonts
+   01. Variables
+   02. Base
+   03. Login page
+   03b. Select server page
+   03c. Add server page
+   04. Header
+   05. Side menu
+   06. Home screen
+   07. Cards & posters
+   08. Library pages
+   09. Detail page
+   10. Video player
+   10b. Search page
+   11. Dialogs & menus (pop-up menus)
+   12. Settings & dashboard
+   13. Plugins (Media Bar, Jellyfin Enhanced)
+   14. Mobile
+   14b. TV (LG webOS, Samsung Tizen)
+   ========================================================== */
+
+
+/* ===== 00. Fonts ===== */
+/* (must stay at the very top of the file) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+
+/* ===== 01. Variables ===== */
+:root {
+  /* Colors */
+  --noc-bg:          #07080d;
+  --noc-surface:     #0f1320;
+  --noc-surface-2:   #161b2c;
+  --noc-input:       #0b0e17;
+  --noc-border:      rgba(255, 255, 255, 0.08);
+  --noc-accent:      #38bdf8;   /* sky blue */
+  --noc-accent-2:    #8b5cf6;   /* violet */
+  --noc-accent-glow: rgba(56, 189, 248, 0.35);
+  --noc-gradient:    linear-gradient(135deg, var(--noc-accent-2), var(--noc-accent));
+  --noc-text:        #e6e9f2;
+  --noc-text-muted:  #8b93a7;
+  --noc-text-dim:    #5b6275;
+  --noc-success:     #22c55e;
+
+  /* Shape */
+  --noc-radius:      12px;
+  --noc-radius-lg:   24px;
+  --noc-card-radius: 8px;    /* posters & library tiles (Netflix uses small corners) */
+
+  /* Font */
+  --noc-font:        'Inter', sans-serif;
+
+  /* Login page */
+  --noc-login-bg:       url('http://192.168.1.104:8096/Branding/Splashscreen');  /* splash screen; full address so the desktop app finds it */
+  --noc-login-blur:     14px;                           /* 0px = sharp posters */
+  --noc-login-title:    "HZ Server";
+  --noc-login-subtitle: "Sign in to your media server";
+
+  /* Select server page */
+  --noc-server-title:    "Welcome back";
+  --noc-server-subtitle: "Choose a server to continue";
+
+  /* Home screen */
+  --noc-library-labels: block;   /* "none" hides the names under the library tiles */
+
+  /* Text sizes (make bigger or smaller here) */
+  --noc-row-title-size:   2.5em;   /* "Continue Watching", "Next Up"... */
+  --noc-card-title-size:  1.6em;   /* movie / episode name under a card */
+  --noc-card-sub-size:    1.3em;   /* year, "S1:E1 - ..." */
+  --noc-library-label-size: 1.6em; /* names under the library tiles */
+  --noc-grid-title-size:  1.05em;  /* movie name under posters on library pages */
+  --noc-grid-sub-size:    0.9em;   /* year under posters on library pages */
+
+  /* Detail page (movie / show page) */
+  --noc-detail-poster: block;     /* "none" hides the poster (also set width to 0vw) */
+  --noc-poster-width:  15vw;      /* poster size on the left */
+  --noc-detail-offset: 4vw;       /* left margin of the page */
+  --noc-detail-text-size: 1.25em; /* size of all text on the movie page (1em = Jellyfin default) */
+  --noc-season-width:  11vw;      /* size of the season posters on a series page */
+  --noc-episode-thumb: 17vw;      /* width of episode thumbnails on a season page */
+  --noc-play-label:   "Play";     /* text on the big play button */
+  --noc-detail-logo:  none;       /* "block" shows the title logo (dark logos are hard to read) */
+
+  /* Add server page */
+  --noc-addserver-title:    "Connect to a server";
+  --noc-addserver-subtitle: "Enter your Jellyfin server's address";
+}
+
+
+/* ===== 02. Base ===== */
+
+/* Font, background, text */
+html, body {
+  font-family: var(--noc-font) !important;
+  background-color: var(--noc-bg) !important;
+  color: var(--noc-text);
+}
+
+.backgroundContainer {
+  background-color: var(--noc-bg) !important;
+}
+
+/* During video playback Jellyfin makes the page transparent so the video
+   (drawn behind it in the desktop app) shows through. Our dark background
+   must step aside, or you only hear the movie. */
+html.transparentDocument,
+html.transparentDocument body,
+html.transparentDocument .backgroundContainer {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Primary buttons (Sign In, Save, etc.) */
+.button-submit,
+.emby-button.raised {
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+  border-radius: 999px !important;
+  font-weight: 600;
+  transition: box-shadow 0.2s ease;
+}
+.button-submit:hover,
+.emby-button.raised:hover {
+  box-shadow: 0 0 18px var(--noc-accent-glow);
+}
+
+/* Text inputs and dropdowns */
+.emby-input,
+.emby-select,
+.emby-textarea {
+  background: var(--noc-surface) !important;
+  border: 1px solid var(--noc-border) !important;
+  border-radius: 8px !important;
+  color: var(--noc-text) !important;
+}
+.emby-input:focus,
+.emby-select:focus,
+.emby-textarea:focus {
+  border-color: var(--noc-accent) !important;
+  outline: none;
+}
+
+
+/* ===== 03. Login page ===== */
+
+/* --- Page & background --- */
+/* The page becomes a full-screen layer that sits above the top bar,
+   so no :has() is needed (the desktop app's engine doesn't support it) */
+#loginPage,
+#selectServerPage,
+.standalonePage:not(.wizardPage) {
+  position: fixed !important;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 999;
+  overflow-y: auto;
+  padding: 0 !important;
+  box-sizing: border-box;
+  background: var(--noc-bg) !important;
+}
+#loginPage:not(.hide),
+#selectServerPage:not(.hide),
+.standalonePage:not(.wizardPage):not(.hide) {
+  display: flex !important;
+  flex-direction: column;
+}
+
+/* Blurred poster wall */
+#loginPage::before,
+#selectServerPage::before,
+.standalonePage:not(.wizardPage)::before {
+  content: "";
+  position: fixed;
+  top: -40px; right: -40px; bottom: -40px; left: -40px;   /* bleed so blur edges don't show */
+  background: var(--noc-login-bg) center / cover no-repeat;
+  filter: blur(var(--noc-login-blur)) brightness(0.55) saturate(1.2);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Dark overlay with soft teal/violet glows */
+#loginPage::after,
+#selectServerPage::after,
+.standalonePage:not(.wizardPage)::after {
+  content: "";
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background:
+    radial-gradient(circle at 20% 35%, rgba(56, 189, 248, 0.14), transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.16), transparent 45%),
+    radial-gradient(ellipse at center, rgba(7, 8, 13, 0.35) 0%, rgba(7, 8, 13, 0.9) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Keep the login content above the background */
+#loginPage > *,
+#selectServerPage > *,
+.standalonePage:not(.wizardPage) > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- The card ---
+   The wrapper around the form, the extra buttons and the disclaimer,
+   so everything sits inside one card. */
+#loginPage > div,
+#selectServerPage > div,
+.standalonePage:not(.wizardPage) > div {
+  background: rgba(15, 19, 32, 0.72) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--noc-border);
+  border-radius: var(--noc-radius-lg);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  width: calc(100% - 2em);
+  max-width: 460px;
+  margin: auto !important;              /* centers the card in the flex page */
+  padding: 3em 2.75em 2.25em !important;
+  box-sizing: border-box;
+  text-align: center;
+  animation: noc-rise 0.6s ease-out;
+}
+
+/* The form itself is inside the card, so no extra box */
+#loginPage .manualLoginForm {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  max-width: 100% !important;
+  width: 100%;
+}
+
+/* --- Logo, title, subtitle (replaces "Please sign in") --- */
+#loginPage h1 {
+  font-size: 0 !important;             /* hides the original text */
+  margin: 0 0 2em !important;
+  text-align: center;
+}
+
+/* App icon + title */
+#loginPage h1::before {
+  content: var(--noc-login-title);
+  display: block;
+  padding-top: 96px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 76'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%2338bdf8'/></linearGradient></defs><rect width='76' height='76' rx='20' fill='url(%23g)'/><mask id='m'><rect width='76' height='76' fill='white'/><circle cx='45' cy='31' r='14' fill='black'/></mask><circle cx='36' cy='40' r='17' fill='white' mask='url(%23m)'/></svg>") top center / 76px no-repeat;
+  filter: drop-shadow(0 8px 24px rgba(139, 92, 246, 0.35));
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--noc-text);
+}
+
+/* Subtitle */
+#loginPage h1::after {
+  content: var(--noc-login-subtitle);
+  display: block;
+  margin-top: 0.5em;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--noc-text-muted);
+}
+
+/* --- Inputs --- */
+#loginPage .inputContainer,
+.addServerForm .inputContainer {
+  text-align: left;
+  margin-bottom: 1.4em;
+}
+
+#loginPage .inputLabel,
+.addServerForm .inputLabel {
+  text-transform: uppercase;
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--noc-text-muted);
+}
+
+#loginPage .emby-input,
+.addServerForm .emby-input {
+  height: 3.2em;
+  padding: 0 1.1em 0 2.9em;
+  font-size: 1em;
+  border: 1px solid var(--noc-border) !important;
+  border-radius: 10px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#loginPage .emby-input:focus,
+.addServerForm .emby-input:focus {
+  border-color: var(--noc-accent) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+/* User icon */
+#loginPage #txtManualName {
+  background: var(--noc-input) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b93a7' stroke-width='1.8' stroke-linecap='round'><circle cx='12' cy='8' r='4'/><path d='M4 21c0-4 4-6 8-6s8 2 8 6'/></svg>") no-repeat 1em center / 1.15em !important;
+}
+
+/* Lock icon */
+#loginPage #txtManualPassword {
+  background: var(--noc-input) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='1.8' stroke-linecap='round'><rect x='5' y='11' width='14' height='10' rx='2'/><path d='M8 11V8a4 4 0 0 1 8 0v3'/></svg>") no-repeat 1em center / 1.15em !important;
+}
+
+/* --- Remember me --- */
+#loginPage .checkboxContainer {
+  text-align: left;
+}
+#loginPage .emby-checkbox-label {
+  color: var(--noc-text-muted);
+  font-size: 0.9em;
+}
+#loginPage .emby-checkbox:checked + span + .checkboxOutline {
+  background: var(--noc-gradient) !important;
+  border-color: transparent !important;
+  border-radius: 5px;
+}
+
+/* --- Sign In button --- */
+#loginPage .button-submit,
+.addServerForm .button-submit {
+  width: 100%;
+  height: 3.3em;
+  margin-top: 1.2em;
+  border-radius: 10px !important;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: white !important;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;
+  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.35);
+}
+#loginPage .button-submit:hover,
+.addServerForm .button-submit:hover {
+  box-shadow: 0 8px 36px rgba(14, 165, 233, 0.55);
+}
+
+/* --- Secondary actions --- */
+#loginPage .btnQuick,
+#loginPage .btnForgotPassword,
+#loginPage .btnSelectServer {
+  background: transparent !important;
+  box-shadow: none !important;
+  font-weight: 500;
+}
+
+/* "OR" divider above Quick Connect */
+#loginPage .btnQuick {
+  position: relative;
+  overflow: visible !important;
+  margin-top: 2.4em !important;
+  color: var(--noc-text-muted) !important;
+}
+#loginPage .btnQuick::before {
+  content: "OR";
+  position: absolute;
+  top: -1.9em;
+  left: 0;
+  right: 0;
+  font-size: 0.7em;
+  letter-spacing: 0.1em;
+  color: var(--noc-text-dim);
+  background:
+    linear-gradient(var(--noc-border), var(--noc-border)) left center / 44% 1px no-repeat,
+    linear-gradient(var(--noc-border), var(--noc-border)) right center / 44% 1px no-repeat;
+}
+#loginPage .btnQuick:hover {
+  color: var(--noc-text) !important;
+}
+
+/* Forgot Password + Change Server side by side, smaller */
+#loginPage .btnForgotPassword,
+#loginPage .btnSelectServer {
+  display: inline-block !important;
+  width: auto !important;
+  margin: 0.2em 0.8em !important;
+  padding: 0.4em 0.6em !important;
+  font-size: 0.85em;
+  color: var(--noc-text-dim) !important;
+}
+#loginPage .btnForgotPassword:hover,
+#loginPage .btnSelectServer:hover {
+  color: var(--noc-accent) !important;
+}
+
+/* --- Disclaimer / status pill ---
+   Put this in Dashboard → Branding → Login disclaimer:
+   <span class="noc-status">Connected to <b>HZ Server</b></span>
+*/
+#loginPage .loginDisclaimer {
+  color: var(--noc-text-muted);
+  text-align: center;
+  font-size: 0.85em;
+  margin-top: 1.5em;
+}
+#loginPage .noc-status {
+  display: inline-block;
+  padding: 0.7em 1.4em;
+  border-radius: 10px;
+  background: rgba(7, 8, 13, 0.6);
+  border: 1px solid var(--noc-border);
+  color: var(--noc-text-dim);
+  font-size: 0.9em;
+}
+#loginPage .noc-status b {
+  color: var(--noc-text);
+  font-weight: 500;
+}
+#loginPage .noc-status::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.6em;
+  border-radius: 50%;
+  background: var(--noc-success);
+  box-shadow: 0 0 8px var(--noc-success);
+  vertical-align: middle;
+}
+
+/* --- User-selection login (click your avatar) --- */
+#loginPage .cardImageContainer {
+  border-radius: 50% !important;
+}
+
+/* Entrance animation */
+@keyframes noc-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ===== 03b. Select server page ===== */
+/* Shares the background and card with the login page (see 03).
+   Note: in the desktop app this page shows before connecting, so it uses
+   the CSS the app cached from your server the last time it connected. */
+
+/* Title: icon + "Welcome back" + subtitle (replaces "Select Server") */
+#selectServerPage h1 {
+  font-size: 0 !important;
+  margin: 0 0 1.8em !important;
+  text-align: center;
+}
+#selectServerPage h1::before {
+  content: var(--noc-server-title);
+  display: block;
+  padding-top: 96px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 76'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%2338bdf8'/></linearGradient></defs><rect width='76' height='76' rx='20' fill='url(%23g)'/><mask id='m'><rect width='76' height='76' fill='white'/><circle cx='45' cy='31' r='14' fill='black'/></mask><circle cx='36' cy='40' r='17' fill='white' mask='url(%23m)'/></svg>") top center / 76px no-repeat;
+  filter: drop-shadow(0 8px 24px rgba(139, 92, 246, 0.35));
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--noc-text);
+}
+#selectServerPage h1::after {
+  content: var(--noc-server-subtitle);
+  display: block;
+  margin-top: 0.5em;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--noc-text-muted);
+}
+
+/* Server tiles */
+/* Room around the tile so its glow is never clipped */
+#selectServerPage .itemsContainer,
+#selectServerPage .servers {
+  margin: 0 !important;
+  padding: 12px !important;
+  overflow: visible !important;
+  contain: none !important;
+  justify-content: center;
+}
+#selectServerPage .card {
+  width: 150px !important;
+  margin: 0 0.5em;
+  background: transparent !important;   /* removes the square block behind the tile */
+  overflow: visible !important;
+  contain: none !important;
+}
+#selectServerPage .cardBox {
+  background: var(--noc-surface-2) !important;
+  border: 1px solid var(--noc-border);
+  border-radius: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#selectServerPage .cardBox * {
+  background-color: transparent !important;
+  border-radius: 0 !important;
+}
+#selectServerPage .card:hover .cardBox,
+#selectServerPage .card:focus .cardBox {
+  transform: none !important;
+  background: #1b2238 !important;
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25), 0 8px 28px rgba(56, 189, 248, 0.22);
+}
+
+/* Replace the flat blue square with a dark tile */
+#selectServerPage .cardImageContainer {
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* Server icon in the violet-to-blue gradient */
+#selectServerPage .cardImageIcon {
+  background: var(--noc-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  font-size: 4.5em !important;
+}
+
+/* Server name */
+#selectServerPage .cardText {
+  color: var(--noc-text) !important;
+  font-weight: 600;
+  font-size: 0.95em;
+  padding: 0 0 1em;
+  text-align: center;
+}
+#selectServerPage .cardText-secondary {
+  color: var(--noc-text-dim) !important;
+  font-weight: 400;
+}
+
+/* "Add Server" as a quiet dashed button */
+#selectServerPage .emby-button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  max-width: none;
+  height: 3em;
+  margin: 1.2em 0 0 !important;
+  background: transparent !important;
+  color: var(--noc-text-muted) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.18) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  font-weight: 500;
+}
+#selectServerPage .emby-button::before {
+  content: "+";
+  margin-right: 0.5em;
+  font-size: 1.3em;
+  font-weight: 400;
+  line-height: 1;
+}
+#selectServerPage .emby-button:hover,
+#selectServerPage .emby-button:focus {
+  color: var(--noc-accent) !important;
+  border-color: var(--noc-accent) !important;
+  background: rgba(56, 189, 248, 0.06) !important;
+}
+
+
+/* ===== 03c. Add server page ===== */
+/* This page has no id, so it's styled through its form (.addServerForm).
+   Its background and card come from the shared .standalonePage rules in 03,
+   which also cover Forgot Password and the connection error screen. */
+
+.addServerForm {
+  width: 100%;
+  margin: 0 !important;
+}
+
+/* Title: server icon + title + subtitle (replaces "Connect to Server") */
+.addServerForm h1 {
+  font-size: 0 !important;
+  margin: 0 0 2em !important;
+  text-align: center;
+}
+.addServerForm h1::before {
+  content: var(--noc-addserver-title);
+  display: block;
+  padding-top: 96px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 76 76'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%238b5cf6'/><stop offset='1' stop-color='%2338bdf8'/></linearGradient></defs><rect width='76' height='76' rx='20' fill='url(%23g)'/><g fill='none' stroke='white' stroke-width='3' stroke-linecap='round'><rect x='22' y='22' width='32' height='12' rx='3'/><rect x='22' y='42' width='32' height='12' rx='3'/></g><g fill='white'><circle cx='29' cy='28' r='2'/><circle cx='29' cy='48' r='2'/></g></svg>") top center / 76px no-repeat;
+  filter: drop-shadow(0 8px 24px rgba(139, 92, 246, 0.35));
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--noc-text);
+}
+.addServerForm h1::after {
+  content: var(--noc-addserver-subtitle);
+  display: block;
+  margin-top: 0.5em;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--noc-text-muted);
+}
+
+/* Host input with a globe icon */
+.addServerForm #txtServerHost {
+  background: var(--noc-input) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='1.8' stroke-linecap='round'><circle cx='12' cy='12' r='9'/><path d='M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9M12 3C9.5 5.7 8.2 8.7 8.2 12s1.3 6.3 3.8 9'/></svg>") no-repeat 1em center / 1.15em !important;
+}
+
+/* Example text under the input */
+.addServerForm .fieldDescription {
+  text-align: left;
+  font-size: 0.8em;
+  color: var(--noc-text-dim);
+  margin-top: 0.6em;
+}
+
+/* Remove the <br> gap Jellyfin puts before the buttons */
+.addServerForm br {
+  display: none;
+}
+
+/* Cancel as a quiet text button */
+.addServerForm .btnCancel,
+.addServerForm .button-cancel {
+  width: 100%;
+  margin-top: 0.8em !important;
+  background: transparent !important;
+  color: var(--noc-text-muted) !important;
+  box-shadow: none !important;
+  border-radius: 10px !important;
+  font-weight: 500;
+}
+.addServerForm .btnCancel:hover,
+.addServerForm .btnCancel:focus,
+.addServerForm .button-cancel:hover,
+.addServerForm .button-cancel:focus {
+  color: var(--noc-text) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+
+/* ===== 04. Header ===== */
+
+/* Fully see-through top bar */
+.skinHeader,
+.skinHeader-withBackground,
+.skinHeader-blurred,
+.skinHeader.semiTransparent {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Soft shadow on the logo and icons so they stay readable over bright banners */
+.skinHeader .headerLeft,
+.skinHeader .headerRight {
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.7));
+}
+
+/* Round icon buttons (menu, cast, SyncPlay, search...)
+   The avatar is excluded: its picture is a background image, and a
+   "background" rule here would erase it. */
+.skinHeader .headerButton {
+  border-radius: 50% !important;
+  color: var(--noc-text) !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.skinHeader .headerButton:not(.headerUserButtonRound) {
+  background-color: transparent !important;
+}
+.skinHeader .headerButton:not(.headerUserButtonRound):hover,
+.skinHeader .headerButton:not(.headerUserButtonRound):focus {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Avatar: keep the picture, add a hover glow */
+.skinHeader .headerUserButtonRound div {
+  background-size: cover !important;
+  background-position: center !important;
+}
+.skinHeader .headerUserButton:hover .headerUserButtonRound,
+.skinHeader .headerUserButton:focus .headerUserButtonRound {
+  box-shadow: 0 0 0 2px var(--noc-accent), 0 0 14px var(--noc-accent-glow) !important;
+}
+
+/* Page name next to the menu button ("Colecciones", "Settings"...) */
+.skinHeader .pageTitle {
+  font-size: 1.35em !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  color: var(--noc-text) !important;
+}
+
+/* User avatar with a thin accent ring */
+.skinHeader .headerUserButtonRound div {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.6);
+}
+
+/* Home / Favorites: bigger pill switcher
+   No shadows or blur here: the tab bar sits inside a scroll container that
+   clips anything outside its box, which showed up as square corners. */
+.headerTabs,
+.headerTabs .tabs-viewmenubar {
+  background: transparent !important;
+}
+.headerTabs .emby-tabs-slider {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(10, 12, 20, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none !important;
+}
+.headerTabs .emby-tab-button {
+  padding: 0.75em 1.8em !important;
+  font-size: 1.05em !important;
+  border-radius: 999px !important;
+  color: rgba(230, 233, 242, 0.75) !important;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.headerTabs .emby-tab-button + .emby-tab-button {
+  margin-left: 4px;
+}
+.headerTabs .emby-tab-button:hover {
+  color: var(--noc-text) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+.headerTabs .emby-tab-button-active,
+.headerTabs .emby-tab-button-active:hover {
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+  box-shadow: none !important;
+}
+.headerTabs .emby-tab-button.show-focus:focus {
+  transform: none !important;
+  box-shadow: inset 0 0 0 2px var(--noc-accent) !important;   /* inside, so it isn't clipped */
+}
+
+
+/* ===== 05. Side menu ===== */
+/* Floating rounded panel. Jellyfin fixes the drawer at 260px wide and slides
+   it in with JavaScript, so the panel is drawn inside that space instead of
+   changing the drawer's size. */
+
+.mainDrawer {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--noc-text);
+}
+
+/* The floating panel */
+.mainDrawer::before {
+  content: "";
+  position: absolute;
+  top: 10px; bottom: 10px; left: 10px; right: 6px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.16), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.10), transparent 45%),
+    rgba(12, 15, 25, 0.9);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* Contents sit inside the panel; User section goes to the bottom */
+.mainDrawer-scrollContainer {
+  position: relative;
+  display: flex !important;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin: 10px 6px 10px 10px;           /* the drawer is a flex row, so this fills its height */
+  padding: 0.6em 0.5em 0.8em !important;
+}
+.mainDrawer-scrollContainer > * {
+  flex-shrink: 0;
+}
+.mainDrawer-scrollContainer > .navMenuOption {
+  flex-grow: 0 !important;
+}
+.mainDrawer .userMenuOptions {
+  margin-top: auto;
+  padding-top: 0.3em;
+  border-top: 1px solid var(--noc-border);
+}
+
+/* Section titles (Media, Administration, User...) */
+.mainDrawer .sidebarHeader {
+  font-size: 0.72em !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--noc-text-dim) !important;
+  margin: 1.5em 0 0.5em !important;
+  padding-left: 0.9em !important;
+  padding-right: 0 !important;
+}
+
+/* Menu rows: bigger text and touch area */
+.mainDrawer .navMenuOption {
+  position: relative;
+  border-radius: 14px;
+  margin: 2px 0;
+  padding: 0.55em 0.7em !important;
+  color: rgba(230, 233, 242, 0.78) !important;
+  font-size: 1.05em;
+  font-weight: 500 !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mainDrawer .navMenuOption:hover,
+.mainDrawer .navMenuOption:focus {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
+/* Icons inside rounded "chips" */
+.mainDrawer .navMenuOptionIcon {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--noc-text-muted);
+  font-size: 1.2em !important;
+  margin-right: 0.75em !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mainDrawer .navMenuOption:hover .navMenuOptionIcon {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--noc-text);
+}
+
+/* Current page: tinted row + gradient icon chip */
+.mainDrawer .navMenuOption-selected,
+.mainDrawer .navMenuOption-selected:hover {
+  background: rgba(56, 189, 248, 0.1) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+.mainDrawer .navMenuOption-selected .navMenuOptionIcon,
+.mainDrawer .navMenuOption-selected:hover .navMenuOptionIcon {
+  background: var(--noc-gradient);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+}
+
+/* Sign Out / Exit turn red on hover */
+.mainDrawer .btnLogout:hover,
+.mainDrawer .btnLogout:focus,
+.mainDrawer .exitApp:hover,
+.mainDrawer .exitApp:focus {
+  color: #fca5a5 !important;
+  background: rgba(248, 113, 113, 0.1) !important;
+}
+.mainDrawer .btnLogout:hover .navMenuOptionIcon,
+.mainDrawer .exitApp:hover .navMenuOptionIcon {
+  background: rgba(248, 113, 113, 0.18);
+  color: #f87171;
+}
+
+
+/* ===== 06. Home screen ===== */
+/* Netflix-style rows: tight thumbnails, bold row titles, and the picture
+   zooms inside its rectangle on hover. */
+
+/* Tighter rows */
+.homeSectionsContainer .verticalSection {
+  margin-bottom: 0.6em;
+}
+
+/* Row titles */
+.homeSectionsContainer .sectionTitle {
+  font-size: var(--noc-row-title-size) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  color: #e9ecf4 !important;
+  margin-bottom: 0.1em !important;
+}
+
+/* "Next Up >" links: arrow appears/slides on hover, like Netflix's "Explore all" */
+.sectionTitleTextButton {
+  display: inline-flex !important;
+  align-items: center;
+  color: var(--noc-text) !important;
+}
+.sectionTitleTextButton .chevron_right {
+  margin-left: 0.2em;
+  color: var(--noc-accent);
+  opacity: 0.6;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.sectionTitleTextButton:hover .chevron_right,
+.sectionTitleTextButton:focus .chevron_right {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* Cards on the home screen use the zoom-inside + ring hover from section 07:
+   the picture grows inside its rectangle, the card itself never grows. */
+
+/* Small gaps between thumbnails */
+.homeSectionsContainer .cardBox {
+  margin: 0.2em 0.3em !important;
+}
+
+/* Text under cards: one consistent style for every row */
+.homeSectionsContainer .cardFooter {
+  padding: 0.6em 2px 0.3em !important;
+}
+.homeSectionsContainer .cardText {
+  padding: 0 !important;
+}
+
+/* Library tiles (My Media): centered label */
+.homeSectionsContainer .card[data-collectiontype] .cardText,
+.homeSectionsContainer .card[data-type="CollectionFolder"] .cardText,
+.homeSectionsContainer .card[data-type="UserView"] .cardText {
+  text-align: center !important;
+  font-size: var(--noc-library-label-size) !important;
+  font-weight: 600;
+  color: var(--noc-text) !important;
+}
+.homeSectionsContainer .card[data-collectiontype] .cardFooter,
+.homeSectionsContainer .card[data-type="CollectionFolder"] .cardFooter,
+.homeSectionsContainer .card[data-type="UserView"] .cardFooter {
+  display: var(--noc-library-labels) !important;
+}
+
+/* Bigger text on the home screen than on library pages */
+.homeSectionsContainer .cardText-first {
+  font-size: var(--noc-card-title-size) !important;
+}
+.homeSectionsContainer .cardText-secondary {
+  font-size: var(--noc-card-sub-size) !important;
+}
+
+/* Movies & episodes: left-aligned, streaming-app style */
+.homeSectionsContainer .card:not([data-collectiontype]):not([data-type="CollectionFolder"]):not([data-type="UserView"]) .cardText {
+  text-align: left !important;
+}
+
+/* Lighter dark overlay on hover so the zoomed picture stays visible */
+.homeSectionsContainer .cardOverlayContainer {
+  background: linear-gradient(to top, rgba(7, 8, 13, 0.55), rgba(7, 8, 13, 0) 55%) !important;
+}
+
+/* Row scroll arrows: dark translucent side buttons */
+.emby-scrollbuttons-button {
+  background: rgba(7, 8, 13, 0.7) !important;
+  border: 1px solid var(--noc-border) !important;
+  border-radius: 50% !important;
+  color: var(--noc-text) !important;
+}
+.emby-scrollbuttons-button:hover:not(:disabled) {
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+}
+
+
+
+/* ===== 07. Cards & posters ===== */
+/* Applies to posters and tiles everywhere, not just the home screen. */
+
+/* Rounded cards; the image is clipped inside the rounded shape */
+.cardScalable {
+  border-radius: var(--noc-card-radius) !important;
+  overflow: hidden;
+  background: var(--noc-surface);
+  transform: translateZ(0);               /* keeps the zoom inside the rounded corners */
+}
+.cardImageContainer,
+.cardContent {
+  border-radius: 0 !important;
+}
+
+/* Hover: the picture zooms inside the card (the card itself doesn't move,
+   so rows never clip it) */
+.cardImageContainer {
+  transition: transform 0.35s ease;
+}
+.card:hover .cardImageContainer,
+.card:focus .cardImageContainer {
+  transform: scale(1.05);
+}
+
+/* Hover ring, drawn inside the card so it can't be clipped */
+.cardScalable::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px var(--noc-accent), inset 0 0 24px rgba(56, 189, 248, 0.25);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.card:hover .cardScalable::after,
+.card:focus .cardScalable::after {
+  opacity: 1;
+}
+#selectServerPage .cardScalable::after {
+  display: none;                          /* that tile has its own hover */
+}
+
+/* Items without artwork (e.g. "TV en vivo"): dark tile + gradient icon */
+.cardContent.defaultCardBackground,
+.defaultCardBackground1,
+.defaultCardBackground2,
+.defaultCardBackground3,
+.defaultCardBackground4,
+.defaultCardBackground5 {
+  background:
+    radial-gradient(circle at 30% 20%, rgba(139, 92, 246, 0.2), transparent 60%),
+    radial-gradient(circle at 80% 90%, rgba(56, 189, 248, 0.12), transparent 55%),
+    var(--noc-surface-2) !important;
+}
+.cardImageIcon {
+  background: var(--noc-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+/* Text under cards */
+.cardFooter {
+  padding-top: 0.45em;
+}
+.cardText {
+  color: var(--noc-text-muted);
+}
+.cardText-first {
+  color: var(--noc-text) !important;
+  font-weight: 600;
+  font-size: var(--noc-grid-title-size) !important;
+  line-height: 1.35;
+}
+.cardText-secondary {
+  color: var(--noc-text-muted) !important;
+  font-size: var(--noc-grid-sub-size) !important;
+  line-height: 1.35;
+  margin-top: 0.1em;
+}
+
+/* Watch progress: thicker bar in the accent gradient */
+.itemProgressBar {
+  height: 5px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.itemProgressBarForeground {
+  background: var(--noc-gradient) !important;
+  border-radius: 3px;
+}
+
+/* Hover overlay: dark fade + round blue play button */
+.cardOverlayContainer {
+  background: linear-gradient(to top, rgba(7, 8, 13, 0.8), rgba(7, 8, 13, 0.15) 60%) !important;
+}
+.cardOverlayFab-primary {
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.cardOverlayButton:not(.cardOverlayFab-primary):hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+
+/* ===== 08. Library pages ===== */
+/* Películas, Series, Colecciones... */
+
+/* --- Toolbar (1-21 of 21, Sort, Filter, ⋮): one centered glass bar ---
+   Jellyfin has a text AND an icon version of most buttons and hides one of
+   them depending on screen width, so nothing here changes "display". */
+.libraryPage .itemsViewSettingsContainer,
+.libraryPage .pageTabContent > .flex.focuscontainer-x {
+  width: -webkit-fit-content;
+  width: fit-content;
+  max-width: calc(100% - 2em);
+  margin: 1.2em auto 0.8em !important;
+  padding: 6px 8px !important;
+  justify-content: center;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(15, 19, 32, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+/* "1-21 of 21" */
+.libraryPage .listPaging {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.9em 0 0.7em;
+  margin-right: 0.3em;
+  border-right: 1px solid var(--noc-border);
+  font-size: 0.95em;
+  font-weight: 500;
+  color: var(--noc-text-muted);
+}
+
+/* Buttons inside the bar */
+.libraryPage .itemsViewSettingsContainer .emby-button,
+.libraryPage .itemsViewSettingsContainer .paper-icon-button-light,
+.libraryPage .pageTabContent > .flex.focuscontainer-x .paper-icon-button-light,
+.libraryPage .listPaging .paper-icon-button-light {
+  vertical-align: middle;
+  align-items: center;
+  margin: 0 2px !important;
+  padding: 0.6em 1.1em !important;
+  border-radius: 999px !important;
+  border: none !important;
+  font-size: 1em;
+  font-weight: 600;
+  color: rgba(230, 233, 242, 0.85) !important;
+  background: transparent !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.libraryPage .itemsViewSettingsContainer .paper-icon-button-light,
+.libraryPage .pageTabContent > .flex.focuscontainer-x .paper-icon-button-light,
+.libraryPage .listPaging .paper-icon-button-light {
+  padding: 0.55em !important;                 /* icon-only buttons are round */
+}
+.libraryPage .itemsViewSettingsContainer .emby-button:hover,
+.libraryPage .itemsViewSettingsContainer .paper-icon-button-light:hover,
+.libraryPage .pageTabContent > .flex.focuscontainer-x .paper-icon-button-light:hover,
+.libraryPage .listPaging .paper-icon-button-light:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.14) !important;
+  color: #ffffff !important;
+}
+.libraryPage .btnSortIcon {
+  font-size: 1.1em;
+  margin-left: 0.2em;
+  color: var(--noc-accent);
+}
+
+/* --- A-Z picker: bigger, vertically centered on the right --- */
+.alphaPicker-vertical.alphaPicker-fixed {
+  top: 50% !important;
+  bottom: auto !important;
+  right: 0.9em !important;
+  transform: translateY(-50%);
+}
+.alphaPicker-vertical {
+  font-size: 1.05em !important;
+  background: rgba(15, 19, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  padding: 0.6em 0.25em !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.alphaPickerButton {
+  width: 1.9em;
+  height: 1.9em;
+  padding: 0 !important;
+  margin: 1px 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: var(--noc-text-muted) !important;
+  font-weight: 700 !important;
+  font-size: 0.85em !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.alphaPickerButton:hover,
+.alphaPickerButton:focus {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+.alphaPickerButton-selected,
+.alphaPickerButton-selected:hover {
+  color: var(--noc-bg) !important;
+  background: var(--noc-accent) !important;
+}
+/* Leave room so posters don't slide under the bar */
+.libraryPage .itemsContainer.vertical-wrap {
+  padding-right: 3.2em !important;
+}
+
+/* --- Badges on posters (number of items, watched check) --- */
+.countIndicator,
+.playedIndicator {
+  background: var(--noc-gradient) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  border: 2px solid rgba(7, 8, 13, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* --- Poster grid: a little more air, text centered under posters --- */
+.libraryPage .itemsContainer.vertical-wrap .cardBox {
+  margin: 0.55em !important;
+}
+.libraryPage .vertical-wrap .cardFooter {
+  padding: 0.55em 2px 0.2em !important;
+}
+
+
+/* ===== 09. Detail page ===== */
+/* Netflix-style: big backdrop across the top, logo + info + buttons over it
+   on the left, rows of cast and similar titles underneath. */
+
+/* Let the backdrop show through Jellyfin's grey panels */
+.itemDetailPage .detailRibbon,
+.itemDetailPage .detailPagePrimaryContainer,
+.itemDetailPage .detailPageSecondaryContainer,
+.noBackdropTransparency .detailPagePrimaryContainer,
+.noBackdropTransparency .detailPageSecondaryContainer {
+  background: transparent !important;
+}
+
+/* --- Hero backdrop: fills the top of the page and scrolls away --- */
+.layout-desktop .itemDetailPage {
+  position: relative;
+}
+.layout-desktop .itemDetailPage .itemBackdrop {
+  position: fixed !important;          /* from the very top of the screen */
+  top: 0; left: 0; right: 0;
+  height: 92vh !important;
+  background-attachment: scroll !important;
+  background-position: center top !important;
+  z-index: 0;
+}
+.itemDetailPage .itemBackdrop::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, var(--noc-bg) 0%, rgba(7, 8, 13, 0.75) 30%, rgba(7, 8, 13, 0.15) 65%, rgba(7, 8, 13, 0.35) 100%),
+    linear-gradient(to right, rgba(7, 8, 13, 0.92) 0%, rgba(7, 8, 13, 0.55) 35%, rgba(7, 8, 13, 0) 65%);
+}
+.layout-desktop .itemDetailPage .detailPageWrapperContainer {
+  position: relative;
+  z-index: 1;
+  margin-top: 40vh !important;
+}
+
+/* Titles WITHOUT a backdrop image: soft Nocturnal glow from the top of the
+   screen, and the content moves up */
+.layout-desktop .itemDetailPage .itemBackdrop:not([style*="url"]) {
+  background:
+    radial-gradient(ellipse 70% 60% at 15% 0%, rgba(139, 92, 246, 0.3), transparent 70%),
+    radial-gradient(ellipse 60% 55% at 90% 0%, rgba(56, 189, 248, 0.2), transparent 70%) !important;
+}
+.layout-desktop .itemDetailPage .itemBackdrop:not([style*="url"])::after {
+  display: none;
+}
+
+.layout-desktop .itemDetailPage .itemBackdrop:not([style*="url"]) ~ .detailPageWrapperContainer {
+  margin-top: 16vh !important;
+}
+
+/* Title logo (off by default: see --noc-detail-logo) */
+.itemDetailPage .detailLogo {
+  display: var(--noc-detail-logo) !important;
+}
+.layout-desktop .itemDetailPage .detailLogo {
+  z-index: 1;
+  top: 13vh !important;
+  left: var(--noc-detail-offset) !important;
+  right: auto !important;
+  width: 34vw !important;
+  height: 22vh !important;
+  background-position: left bottom !important;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.85));
+}
+
+/* --- Small poster on the left, info next to it --- */
+.layout-desktop .itemDetailPage .detailPagePrimaryContainer {
+  min-height: calc(var(--noc-poster-width) * 1.5 + 1.5em);
+}
+.layout-desktop .itemDetailPage .detailPagePrimaryContainer > .detailImageContainer {
+  display: var(--noc-detail-poster) !important;
+  position: absolute;
+  top: 0.4em;
+  left: var(--noc-detail-offset);
+  width: var(--noc-poster-width);
+  z-index: 2;
+}
+.layout-desktop .itemDetailPage .detailImageContainer .card {
+  float: none;
+  top: 0 !important;
+  width: 100%;
+  max-width: 100%;
+}
+.layout-desktop .itemDetailPage .detailImageContainer .card .cardScalable {
+  border-radius: 14px !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+/* Title, buttons, pickers and description start to the right of the poster */
+.layout-desktop .itemDetailPage .detailRibbon,
+.layout-desktop .itemDetailPage .detailPagePrimaryContent {
+  padding-left: calc(var(--noc-detail-offset) + var(--noc-poster-width) + 2.5vw) !important;
+  padding-right: 4vw !important;
+}
+/* Bigger text: everything in these areas is measured in em, so one size
+   scales the title, info, buttons, pickers and description together */
+.itemDetailPage .detailRibbon,
+.itemDetailPage .detailPagePrimaryContent {
+  font-size: var(--noc-detail-text-size) !important;
+}
+.itemDetailPage .detailPageSecondaryContainer .cardFooter {
+  font-size: 1.15em;
+}
+
+/* Rows below (Cast, More Like This) use the full width */
+.layout-desktop .itemDetailPage .detailPageSecondaryContainer {
+  padding-left: var(--noc-detail-offset) !important;
+  padding-right: 4vw !important;
+}
+/* This one sits inside the secondary container, so no second margin */
+.layout-desktop .itemDetailPage .detailPageContent {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.itemDetailPage .detailSectionContent,
+.itemDetailPage .itemDetailsGroup {
+  max-width: 60em;
+}
+
+/* Info first, buttons underneath (instead of buttons far right).
+   Jellyfin gives this area a fixed height and pulls it up with a negative
+   margin; both are removed so the buttons never overlap what's below. */
+.layout-desktop .itemDetailPage .detailRibbon {
+  flex-direction: column;
+  align-items: flex-start !important;
+  height: auto !important;
+  margin-top: 0 !important;
+  padding-bottom: 0.4em;
+}
+.layout-desktop .itemDetailPage .detailPagePrimaryContent {
+  padding-top: 0.6em !important;
+}
+.itemDetailPage .infoWrapper {
+  max-width: 60em;
+}
+
+/* --- Title and info line --- */
+.itemDetailPage .itemName {
+  font-size: 2.8em !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #ffffff !important;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
+}
+.itemDetailPage .itemName.originalTitle,
+.itemDetailPage .parentName {
+  font-size: 1.15em !important;
+  font-weight: 500 !important;
+  color: var(--noc-text-muted) !important;
+}
+.itemDetailPage .itemMiscInfo {
+  font-size: 1.1em;
+  color: rgba(230, 233, 242, 0.85);
+}
+.itemDetailPage .mediaInfoItem {
+  margin-right: 1.1em !important;
+}
+.itemDetailPage .mediaInfoOfficialRating {
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  border-radius: 6px !important;
+  padding: 0.1em 0.5em !important;
+  font-weight: 700;
+  color: var(--noc-text) !important;
+}
+
+/* --- Buttons: "▶ Play" pill + round glass buttons --- */
+.itemDetailPage .mainDetailButtons {
+  align-items: center;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+}
+.itemDetailPage .mainDetailButtons .detailButton {
+  width: 3.3em;
+  height: 3.3em;
+  margin: 0 0.6em 0 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(20, 24, 38, 0.6) !important;
+  border: 2px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.itemDetailPage .mainDetailButtons .detailButton:hover,
+.itemDetailPage .mainDetailButtons .detailButton:focus {
+  border-color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  transform: scale(1.06);
+}
+.itemDetailPage .mainDetailButtons .detailButton-icon {
+  font-size: 1.5em !important;
+}
+.itemDetailPage .mainDetailButtons .btnPlay,
+.itemDetailPage .mainDetailButtons .btnReplay {
+  width: auto;
+  height: 3.3em;
+  padding: 0 2em 0 1.5em !important;
+  border-radius: 999px !important;
+  border: none !important;
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+  box-shadow: 0 8px 26px var(--noc-accent-glow);
+}
+.itemDetailPage .mainDetailButtons .btnPlay:hover,
+.itemDetailPage .mainDetailButtons .btnReplay:hover {
+  background: #5ecbff !important;
+  transform: scale(1.04);
+}
+.itemDetailPage .mainDetailButtons .btnPlay .detailButton-content,
+.itemDetailPage .mainDetailButtons .btnReplay .detailButton-content {
+  flex-direction: row;
+}
+.itemDetailPage .mainDetailButtons .btnPlay .detailButton-content::after {
+  content: var(--noc-play-label);
+  margin-left: 0.35em;
+  font-size: 1.2em;
+  font-weight: 700;
+}
+.itemDetailPage .mainDetailButtons .btnPlay .detailButton-icon,
+.itemDetailPage .mainDetailButtons .btnReplay .detailButton-icon {
+  font-size: 2em !important;
+}
+/* Favorite / watched light up when active */
+.itemDetailPage .mainDetailButtons .btnUserRating.ratingbutton-withrating {
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.7) !important;
+}
+.itemDetailPage .mainDetailButtons .btnPlaystate.playstatebutton-played {
+  color: var(--noc-accent) !important;
+  border-color: rgba(56, 189, 248, 0.7) !important;
+}
+
+/* --- Video / Audio / Subtitles pickers --- */
+.itemDetailPage .trackSelections {
+  max-width: 44em;
+}
+.itemDetailPage .trackSelections .selectLabel {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--noc-text-muted);
+}
+.itemDetailPage .detailTrackSelect {
+  height: 2.6em;
+  border-radius: 10px !important;
+  padding-left: 0.9em !important;
+  background-color: rgba(15, 19, 32, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.itemDetailPage .detailTrackSelect:hover {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+}
+
+/* --- Description, tags, genres, director... --- */
+.itemDetailPage .overview {
+  font-size: 1.15em;
+  line-height: 1.65;
+  color: rgba(230, 233, 242, 0.92);
+  max-width: 52em;
+}
+.itemDetailPage .tagline {
+  font-style: italic;
+  color: var(--noc-text-muted);
+}
+.itemDetailPage .itemDetailsGroup .label {
+  color: var(--noc-text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+}
+.itemDetailPage a.button-link,
+.itemDetailPage .itemDetailsGroup a {
+  color: var(--noc-text) !important;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.itemDetailPage a.button-link:hover,
+.itemDetailPage .itemDetailsGroup a:hover {
+  color: var(--noc-accent) !important;
+}
+
+/* --- Rows below (Cast & Crew, More Like This, Seasons...) --- */
+.itemDetailPage .detailVerticalSection {
+  margin-top: 1.2em;
+}
+.itemDetailPage .detailVerticalSection .sectionTitle {
+  font-size: 1.7em !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  color: #e9ecf4 !important;
+}
+
+/* Seasons (series page): one horizontal row instead of wrapping after 3 */
+.itemDetailPage #listChildrenCollapsible .itemsContainer.vertical-wrap {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.3em 0 1em !important;
+  scrollbar-width: thin;
+}
+.itemDetailPage #listChildrenCollapsible .itemsContainer.vertical-wrap > .card {
+  flex: 0 0 auto;
+  width: var(--noc-season-width) !important;
+}
+.itemDetailPage #listChildrenCollapsible .itemsContainer.vertical-wrap .cardBox {
+  margin: 0 1.1em 0 0 !important;
+}
+.itemDetailPage #listChildrenCollapsible .cardText {
+  text-align: center !important;
+}
+.itemDetailPage #listChildrenCollapsible .cardText-first {
+  font-size: 1em !important;
+  font-weight: 700;
+}
+.itemDetailPage #listChildrenCollapsible .itemsContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+/* --- Episodes (season page): Netflix-style list --- */
+.itemDetailPage #listChildrenCollapsible .vertical-list {
+  margin-top: 0.4em;
+}
+.itemDetailPage #listChildrenCollapsible .listItem {
+  display: flex !important;
+  align-items: center !important;
+  padding: 0.9em 1em !important;
+  margin: 0 !important;
+  border-radius: 16px;
+  border-bottom: 1px solid var(--noc-border) !important;
+  background: transparent !important;
+  transition: background 0.15s ease;
+}
+.itemDetailPage #listChildrenCollapsible .listItem:last-child {
+  border-bottom: none !important;
+}
+.itemDetailPage #listChildrenCollapsible .listItem:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Thumbnail: smaller 16:9, rounded, play button on hover */
+.itemDetailPage #listChildrenCollapsible .listItemImage {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--noc-episode-thumb) !important;
+  height: calc(var(--noc-episode-thumb) * 0.5625) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  background-size: cover !important;
+  background-position: center !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+.itemDetailPage #listChildrenCollapsible .listItemImageButton {
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+  border-radius: 50% !important;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.itemDetailPage #listChildrenCollapsible .listItem:hover .listItemImageButton {
+  opacity: 1;
+  transform: scale(1);
+}
+.itemDetailPage #listChildrenCollapsible .listItemProgressBar .itemProgressBarForeground {
+  background: var(--noc-gradient) !important;
+}
+
+/* Text: bold title, dim info, description limited to 3 lines */
+.itemDetailPage #listChildrenCollapsible .listItemBody {
+  padding-left: 1.6em !important;
+  padding-right: 1em !important;
+}
+.itemDetailPage #listChildrenCollapsible .listItemBodyText:first-child {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.25em;
+}
+.itemDetailPage #listChildrenCollapsible .listItemMediaInfo {
+  font-size: 0.95em;
+  color: var(--noc-text-muted) !important;
+  margin-bottom: 0.5em;
+}
+.itemDetailPage #listChildrenCollapsible .listItem-overview {
+  font-size: 1em;
+  line-height: 1.55;
+  color: rgba(230, 233, 242, 0.72) !important;
+  white-space: normal !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 60em;
+}
+
+/* Info / watched / favorite / ⋮: quiet round buttons */
+.itemDetailPage #listChildrenCollapsible .listViewUserDataButtons .listItemButton,
+.itemDetailPage #listChildrenCollapsible .listViewUserDataButtons .paper-icon-button-light {
+  border-radius: 50% !important;
+  color: var(--noc-text-muted) !important;
+  background: transparent !important;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.itemDetailPage #listChildrenCollapsible .listItem:hover .listViewUserDataButtons .paper-icon-button-light {
+  opacity: 1;
+}
+.itemDetailPage #listChildrenCollapsible .listViewUserDataButtons .paper-icon-button-light:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+.itemDetailPage #listChildrenCollapsible .ratingbutton-withrating {
+  color: #f87171 !important;
+  opacity: 1;
+}
+.itemDetailPage #listChildrenCollapsible .playstatebutton-played {
+  color: var(--noc-accent) !important;
+  opacity: 1;
+}
+
+/* Cast: round photos, like streaming apps */
+.itemDetailPage .personCard .cardScalable {
+  border-radius: 50% !important;
+}
+.itemDetailPage .personCard .cardPadder {
+  padding-bottom: 100% !important;       /* square box so the circle is round */
+}
+.itemDetailPage .personCard .cardImageContainer {
+  background-position: center 20% !important;   /* keep faces in the circle */
+}
+.itemDetailPage .personCard .cardText {
+  text-align: center !important;
+}
+.itemDetailPage .personCard .cardText-first {
+  font-size: 1em !important;
+}
+.itemDetailPage .personCard .cardText-secondary {
+  font-size: 0.85em !important;
+}
+
+
+/* ===== 10. Video player ===== */
+/* Netflix-style: big plain white icons, title centered at the bottom,
+   thin progress bar in the accent colors, strong fades for readability. */
+
+/* --- Fades (drawn as separate layers so nothing can override them) --- */
+.videoOsdBottom {
+  background: none !important;
+}
+.videoOsdBottom::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22em;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.65) 35%, rgba(0, 0, 0, 0) 100%);
+}
+.videoOsdBottom > * {
+  position: relative;
+  z-index: 1;
+}
+.skinHeader.osdHeader {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.35) 60%, rgba(0, 0, 0, 0) 100%) !important;
+}
+
+/* --- Top: back arrow + title --- */
+/* No circle and no growing here: the top bar is short and cuts both off */
+.skinHeader.osdHeader .headerButton.headerBackButton,
+.skinHeader.osdHeader .headerButton.headerBackButton:hover,
+.skinHeader.osdHeader .headerButton.headerBackButton:focus {
+  background-color: transparent !important;
+  transform: none !important;
+}
+.skinHeader.osdHeader .headerButton.headerBackButton:hover,
+.skinHeader.osdHeader .headerButton.headerBackButton:focus {
+  color: var(--noc-accent) !important;
+}
+
+/* Title: top left, big and bold with a shadow so it reads over any scene */
+.osdHeader .pageTitle {
+  font-size: 1.45em !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  margin-left: 0.3em !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60vw;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9);
+}
+.skinHeader.osdHeader .headerTop {
+  padding-top: 0.6em;
+  padding-left: 0.6em;
+}
+
+/* --- Progress bar: thin, thickens on hover --- */
+.videoOsdBottom .mdl-slider-background-flex {
+  height: 0.3em !important;
+  margin-top: -0.15em !important;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25) !important;
+  transition: height 0.15s ease, margin-top 0.15s ease;
+}
+.videoOsdBottom .sliderContainer:hover .mdl-slider-background-flex {
+  height: 0.55em !important;
+  margin-top: -0.275em !important;
+}
+.videoOsdBottom .mdl-slider-background-upper {
+  background: rgba(255, 255, 255, 0.35) !important;   /* loaded ahead */
+}
+.videoOsdBottom .mdl-slider-background-lower {
+  background: var(--noc-gradient) !important;          /* watched */
+}
+.videoOsdBottom .mdl-slider::-webkit-slider-thumb {
+  background: var(--noc-accent) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9);
+}
+.videoOsdBottom .mdl-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.4);
+}
+.videoOsdBottom .sliderBubble {
+  background: rgba(15, 19, 32, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  font-weight: 600;
+}
+.videoOsdBottom .sliderMarker {
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Time: remaining time bold on the right (Netflix shows only that) */
+.videoOsdBottom .osdPositionText {
+  font-size: 0.95em;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+.videoOsdBottom .osdDurationText {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Buttons: big plain white icons that grow on hover --- */
+.videoOsdBottom .buttons .paper-icon-button-light {
+  color: #ffffff !important;
+  background: transparent !important;
+  border-radius: 50% !important;
+  margin: 0 0.35em !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+}
+.videoOsdBottom .buttons .paper-icon-button-light:hover,
+.videoOsdBottom .buttons .paper-icon-button-light:focus {
+  background: transparent !important;
+  color: #ffffff !important;
+  transform: scale(1.2);
+}
+.videoOsdBottom .buttons .xlargePaperIconButton,
+.videoOsdBottom .buttons .largePaperIconButton {
+  font-size: 2.3em !important;
+}
+/* Play / pause a bit bigger than the rest */
+.videoOsdBottom .buttons .btnPause .xlargePaperIconButton {
+  font-size: 2.9em !important;
+}
+/* Favorite shows red when active */
+.videoOsdBottom .buttons .btnUserRating.ratingbutton-withrating {
+  color: #f87171 !important;
+}
+
+/* "★ 7.9 · Ends at 1:06 AM": small and quiet */
+.videoOsdBottom .osdSecondaryMediaInfo,
+.videoOsdBottom .osdTimeText,
+.videoOsdBottom .endsAtText {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+/* Volume slider */
+.videoOsdBottom .osdVolumeSliderContainer .mdl-slider-background-flex {
+  height: 0.3em !important;
+  margin-top: -0.15em !important;
+}
+
+/* --- Skip Intro / Skip Credits: Netflix-style outlined button --- */
+.skip-button,
+.skipIntro button,
+.skipIntro .emby-button {
+  background: rgba(20, 20, 20, 0.55) !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 8px !important;
+  padding: 0.75em 1.6em !important;
+  font-family: var(--noc-font) !important;
+  font-weight: 700 !important;
+  font-size: 1.15em !important;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.3s ease !important;
+}
+.skip-button:hover,
+.skip-button:focus,
+.skipIntro button:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* --- "Up next" card at the end of an episode --- */
+.upNextContainer {
+  background: rgba(15, 19, 32, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+
+
+/* ===== 10b. Search page ===== */
+
+/* Big rounded search box with the icon inside */
+#searchPage .searchFields {
+  padding-top: 2.2em !important;
+  padding-bottom: 1.2em !important;
+}
+#searchPage .searchFieldsInner {
+  position: relative;
+  max-width: 44em !important;
+}
+#searchPage .searchfields-icon {
+  position: absolute;
+  left: 0.85em;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0 !important;
+  align-self: auto !important;
+  font-size: 1.7em !important;
+  color: var(--noc-text-muted);
+  z-index: 2;
+  pointer-events: none;
+}
+#searchPage .searchFieldsInner .inputContainer {
+  margin: 0 !important;
+}
+#searchPage .searchfields-txtSearch {
+  height: 3.2em !important;
+  font-size: 1.25em !important;
+  padding: 0 1.2em 0 2.8em !important;
+  border-radius: 999px !important;
+  background: rgba(15, 19, 32, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+#searchPage .searchfields-txtSearch:focus {
+  border-color: var(--noc-accent) !important;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+}
+#searchPage .searchfields-txtSearch::placeholder {
+  color: var(--noc-text-dim);
+}
+
+/* Suggestions: title as a small label, titles as clickable chips */
+#searchPage .searchSuggestions .sectionTitle {
+  text-align: center;
+  font-size: 0.8em !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--noc-text-dim) !important;
+  margin-bottom: 1em !important;
+}
+#searchPage .searchSuggestionsList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 60em;
+  margin: 0 auto;
+}
+#searchPage .searchSuggestionsList > div {
+  margin: 0 0.35em 0.7em;
+}
+#searchPage .searchSuggestionsList .button-link {
+  display: inline-block;
+  padding: 0.6em 1.2em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--noc-text) !important;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+#searchPage .searchSuggestionsList .button-link:hover,
+#searchPage .searchSuggestionsList .button-link:focus {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #ffffff !important;
+}
+
+/* Results: row titles like the home screen, people with round photos */
+#searchPage .searchResults .sectionTitle {
+  font-size: 1.6em !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  color: #e9ecf4 !important;
+}
+#searchPage .card[data-type="Person"] .cardScalable {
+  border-radius: 50% !important;
+}
+#searchPage .card[data-type="Person"] .cardPadder {
+  padding-bottom: 100% !important;
+}
+#searchPage .card[data-type="Person"] .cardImageContainer {
+  background-position: center 20% !important;
+}
+
+/* "No results" */
+#searchPage .noItemsMessage {
+  margin-top: 3em;
+  color: var(--noc-text-muted);
+  font-size: 1.1em;
+}
+
+
+/* ===== 11. Dialogs & menus ===== */
+
+/* --- Windows: Filter, Sort, View settings, editors... (formDialog) --- */
+.formDialog {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.12), transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.08), transparent 40%),
+    var(--noc-surface) !important;
+  color: var(--noc-text);
+}
+.formDialog:not(.dialog-fullscreen) {
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6) !important;
+  overflow: hidden;
+}
+
+/* Title bar */
+.formDialogHeader {
+  background: transparent !important;
+  border-bottom: 1px solid var(--noc-border);
+  padding: 0.6em 1em !important;
+}
+.formDialogHeaderTitle {
+  font-size: 1.35em !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  color: var(--noc-text) !important;
+}
+.formDialogHeader .paper-icon-button-light {
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  margin-right: 0.6em;
+}
+.formDialogHeader .paper-icon-button-light:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+/* Bottom buttons (Save, OK...) */
+.formDialogFooter {
+  background: transparent !important;
+  border-top: 1px solid var(--noc-border);
+}
+
+/* Section headings inside windows (Genres, Video Type, Features...) */
+.formDialog .checkboxListLabel,
+.formDialog .sectionTitle {
+  font-size: 0.78em !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--noc-text-dim) !important;
+  margin: 0.5em 0 0.9em !important;
+}
+
+/* Filter options become toggle chips (checked = gradient) */
+.formDialog .checkboxList-verticalwrap {
+  display: flex !important;
+  flex-wrap: wrap;
+}
+.formDialog .checkboxList-verticalwrap .emby-checkbox-label {
+  width: auto !important;
+  padding-left: 0 !important;
+  margin: 0 0.5em 0.6em 0 !important;
+  min-height: 0 !important;
+}
+.formDialog .checkboxList-verticalwrap .checkboxOutline {
+  display: none !important;
+}
+.formDialog .checkboxList-verticalwrap .checkboxLabel {
+  display: inline-block;
+  padding: 0.55em 1.2em;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--noc-text-muted);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.formDialog .checkboxList-verticalwrap .emby-checkbox-label:hover .checkboxLabel {
+  border-color: rgba(56, 189, 248, 0.5);
+  color: var(--noc-text);
+}
+.formDialog .checkboxList-verticalwrap .emby-checkbox:checked + .checkboxLabel {
+  background: var(--noc-gradient);
+  border-color: transparent;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+}
+.formDialog .checkboxList-verticalwrap .emby-checkbox:focus + .checkboxLabel {
+  box-shadow: 0 0 0 2px var(--noc-accent);
+}
+
+/* Regular checkboxes everywhere else: rounded, gradient when checked */
+.checkboxOutline {
+  border-radius: 6px !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+.emby-checkbox:checked + span + .checkboxOutline {
+  background: var(--noc-gradient) !important;
+  border-color: transparent !important;
+}
+
+/* Dropdowns inside windows (Sort by, Sort order...) */
+.formDialog .selectLabel,
+.formDialog .inputLabel {
+  font-size: 0.78em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--noc-text-muted);
+}
+.formDialog .emby-select,
+.formDialog .emby-input {
+  height: 3em;
+  border-radius: 12px !important;
+  padding-left: 1em !important;
+  background-color: var(--noc-input) !important;
+}
+.formDialog .selectContainer,
+.formDialog .inputContainer {
+  margin-bottom: 1.4em;
+}
+
+
+/* --- Pop-up menus (action sheets) ---
+   Used everywhere: the server menu on Select Server, the "..." menu on
+   posters, sort/filter menus, audio & subtitle pickers, etc. */
+
+/* Slightly darker dim behind the menu */
+.dialogBackdropOpened {
+  opacity: 0.6 !important;
+}
+
+.actionSheet {
+  background: rgba(15, 19, 32, 0.96) !important;
+  border: 1px solid var(--noc-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(56, 189, 248, 0.06) !important;
+  min-width: 240px;
+  overflow: hidden;
+  color: var(--noc-text);
+}
+.actionsheet-fullscreen {
+  border-radius: 0 !important;          /* phones: full screen, no corners */
+}
+
+.actionSheetContent {
+  padding: 0.5em !important;
+}
+
+/* Title (e.g. the server name) */
+.actionSheetTitle {
+  font-size: 1.05em !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  color: var(--noc-text);
+  margin: 0.6em 0 0.5em !important;
+  padding: 0 0.7em 0.7em !important;
+  border-bottom: 1px solid var(--noc-border);
+}
+.actionSheetText {
+  color: var(--noc-text-muted);
+  font-size: 0.9em;
+}
+
+/* Menu items */
+.actionSheetMenuItem {
+  border-radius: 10px !important;
+  margin: 2px 0 !important;
+  background: transparent !important;
+  color: var(--noc-text) !important;
+  font-size: 0.95em;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.actionSheetMenuItem:hover,
+.actionSheetMenuItem:focus {
+  background: rgba(56, 189, 248, 0.12) !important;
+  color: #ffffff !important;
+}
+.actionsheetListItemBody {
+  padding: 0.65em 1em !important;
+}
+.actionsheetMenuItemIcon {
+  color: var(--noc-accent);
+}
+
+/* Destructive actions (Delete) in red */
+.actionSheetMenuItem[data-id="delete"] {
+  color: #f87171 !important;
+}
+.actionSheetMenuItem[data-id="delete"]:hover,
+.actionSheetMenuItem[data-id="delete"]:focus {
+  background: rgba(248, 113, 113, 0.12) !important;
+  color: #fca5a5 !important;
+}
+
+.actionsheetDivider {
+  background: var(--noc-border) !important;
+  margin: 0.35em 0.5em !important;
+}
+
+/* Cancel button at the bottom of some menus */
+.actionSheet .btnCloseActionSheet {
+  color: var(--noc-text-muted) !important;
+  background: transparent !important;
+  border-radius: 10px !important;
+}
+.actionSheet .btnCloseActionSheet:hover {
+  color: var(--noc-text) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+
+/* ===== 12. Settings & dashboard ===== */
+
+/* --- User settings menu (avatar → Settings) --- */
+
+#myPreferencesMenuPage .readOnlyContent {
+  max-width: 680px !important;
+  margin: 0 auto;
+}
+
+/* Each group becomes a rounded glass card */
+#myPreferencesMenuPage .verticalSection {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.08), transparent 50%),
+    rgba(15, 19, 32, 0.75);
+  border: 1px solid var(--noc-border);
+  border-radius: 20px;
+  padding: 0.6em 0.6em 0.7em !important;
+  margin-bottom: 1.4em !important;
+}
+
+/* Group titles: username big, the rest as small uppercase labels */
+#myPreferencesMenuPage .sectionTitle {
+  font-size: 0.75em !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--noc-text-dim) !important;
+  margin: 0.9em 0 0.5em 0.9em !important;
+}
+#myPreferencesMenuPage .verticalSection:first-child .sectionTitle {
+  font-size: 1.8em !important;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  color: var(--noc-text) !important;
+  margin: 0.4em 0 0.4em 0.45em !important;
+}
+
+/* Rows: bigger, rounded, no divider lines */
+#myPreferencesMenuPage .listItem-border {
+  display: block;
+  border: none !important;
+  border-radius: 14px !important;
+  margin: 2px 0 !important;
+  color: rgba(230, 233, 242, 0.85) !important;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+#myPreferencesMenuPage .listItem-border:hover,
+#myPreferencesMenuPage .listItem-border:focus {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+#myPreferencesMenuPage .listItem {
+  position: relative;
+  padding: 0.65em 2.6em 0.65em 0.7em !important;
+  min-height: 0 !important;
+  background: transparent !important;
+}
+#myPreferencesMenuPage .listItemBodyText {
+  font-size: 1.1em;
+  font-weight: 500;
+}
+
+/* Icons in rounded chips, like the side menu */
+#myPreferencesMenuPage .listItemIcon {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  padding: 0 !important;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--noc-text-muted) !important;
+  font-size: 1.25em !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+#myPreferencesMenuPage .listItem-border:hover .listItemIcon,
+#myPreferencesMenuPage .listItem-border:focus .listItemIcon {
+  background: var(--noc-gradient) !important;
+  color: #ffffff !important;
+}
+
+/* "›" arrow on the right of each row */
+#myPreferencesMenuPage .listItem::after {
+  content: "›";
+  position: absolute;
+  right: 0.9em;
+  top: 50%;
+  transform: translateY(-55%);
+  font-size: 1.6em;
+  line-height: 1;
+  color: var(--noc-text-dim);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+#myPreferencesMenuPage .listItem-border:hover .listItem::after {
+  color: var(--noc-accent);
+  transform: translate(3px, -55%);
+}
+
+/* Sign Out / Exit: red on hover, no arrow */
+#myPreferencesMenuPage .btnLogout:hover,
+#myPreferencesMenuPage .exitApp:hover {
+  background: rgba(248, 113, 113, 0.1) !important;
+  color: #fca5a5 !important;
+}
+#myPreferencesMenuPage .btnLogout:hover .listItemIcon,
+#myPreferencesMenuPage .exitApp:hover .listItemIcon {
+  background: rgba(248, 113, 113, 0.2) !important;
+  color: #f87171 !important;
+}
+#myPreferencesMenuPage .btnLogout .listItem::after,
+#myPreferencesMenuPage .exitApp .listItem::after {
+  display: none;
+}
+
+
+/* --- Admin Dashboard (built with MUI; body gets .dashboardDocument) --- */
+
+.dashboardDocument,
+.dashboardDocument .skinBody {
+  background: var(--noc-bg) !important;
+}
+
+/* Side menu */
+.dashboardDocument .MuiDrawer-paper {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.12), transparent 40%),
+    rgba(12, 15, 25, 0.96) !important;
+  background-image: none;
+  border-right: 1px solid var(--noc-border) !important;
+}
+.dashboardDocument .MuiDrawer-paper .MuiListSubheader-root {
+  background: transparent !important;
+  font-size: 0.7em !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--noc-text-dim) !important;
+  line-height: 2.6em !important;
+}
+.dashboardDocument .MuiDrawer-paper .MuiListItemButton-root {
+  border-radius: 12px !important;
+  margin: 1px 10px !important;
+  color: rgba(230, 233, 242, 0.8) !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.dashboardDocument .MuiDrawer-paper .MuiListItemButton-root:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+.dashboardDocument .MuiDrawer-paper .MuiListItemButton-root.Mui-selected {
+  background: rgba(56, 189, 248, 0.14) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+.dashboardDocument .MuiDrawer-paper .MuiListItemIcon-root {
+  color: var(--noc-text-muted) !important;
+}
+.dashboardDocument .MuiDrawer-paper .Mui-selected .MuiListItemIcon-root {
+  color: var(--noc-accent) !important;
+}
+
+/* Top bar */
+.dashboardDocument .MuiAppBar-root {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Panels (Server info, Activity, Alerts, Paths...) */
+.dashboardDocument .MuiPaper-root:not(.MuiDrawer-paper):not(.MuiAppBar-root):not(.MuiMenu-paper):not(.MuiPopover-paper) {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.06), transparent 45%),
+    rgba(15, 19, 32, 0.85) !important;
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+/* Device cards */
+.dashboardDocument .MuiCard-root {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+/* Buttons (Scan All Libraries, Restart, Shutdown, Save...) */
+.dashboardDocument .MuiButton-root {
+  border-radius: 999px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  padding-left: 1.2em !important;
+  padding-right: 1.2em !important;
+  box-shadow: none !important;
+}
+.dashboardDocument .MuiButton-containedPrimary {
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+}
+.dashboardDocument .MuiButton-containedPrimary:hover {
+  background: #7dd6ff !important;
+}
+.dashboardDocument .MuiButton-outlinedPrimary,
+.dashboardDocument .MuiButton-textPrimary {
+  color: var(--noc-accent) !important;
+}
+
+/* Inputs, dropdowns, switches, tabs */
+.dashboardDocument .MuiOutlinedInput-root {
+  border-radius: 12px !important;
+  background: var(--noc-input);
+}
+.dashboardDocument .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+.dashboardDocument .Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--noc-accent) !important;
+}
+.dashboardDocument .MuiInputLabel-root.Mui-focused {
+  color: var(--noc-accent) !important;
+}
+.dashboardDocument .MuiSwitch-switchBase.Mui-checked {
+  color: #ffffff !important;
+}
+.dashboardDocument .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
+  background: var(--noc-gradient) !important;
+  opacity: 1 !important;
+}
+.dashboardDocument .MuiCheckbox-root.Mui-checked,
+.dashboardDocument .MuiRadio-root.Mui-checked {
+  color: var(--noc-accent) !important;
+}
+.dashboardDocument .MuiTab-root.Mui-selected {
+  color: var(--noc-accent) !important;
+}
+.dashboardDocument .MuiTabs-indicator {
+  background: var(--noc-gradient) !important;
+  height: 3px !important;
+  border-radius: 3px;
+}
+
+/* Tables (Users, Devices, Activity...) */
+.dashboardDocument .MuiTableCell-root {
+  border-bottom-color: var(--noc-border) !important;
+}
+.dashboardDocument .MuiTableRow-root:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Menus and pop-ups inside the dashboard */
+.dashboardDocument .MuiMenu-paper,
+.dashboardDocument .MuiPopover-paper,
+.MuiDialog-paper {
+  background: rgba(15, 19, 32, 0.97) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px !important;
+}
+
+
+/* ===== 13. Plugins ===== */
+
+/* --- Media Bar ---
+   The plugin pushes the home rows below the banner using a page offset that
+   its script measures. It sometimes measures a hidden page and gets your
+   scroll position instead, which slides the rows up over the banner.
+   On the normal desktop layout that offset is always 0, so pin it. */
+html {
+  --slideshow-page-offset: 0px !important;
+}
+
+/* Media Bar uses our font instead of its narrow one */
+html {
+  --slideshow-font: var(--noc-font) !important;
+}
+#slides-container .runTime,
+#slides-container .date {
+  font-family: var(--noc-font) !important;
+}
+
+/* Soft fade from the banner into the page (no hard line under it) */
+#slides-container::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 35vh;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(to top, var(--noc-bg) 0%, rgba(7, 8, 13, 0.7) 40%, rgba(7, 8, 13, 0) 100%);
+}
+
+/* Title logo: a touch of shadow so it pops off bright images */
+#slides-container .logo {
+  filter: brightness(1.3) drop-shadow(0 4px 18px rgba(0, 0, 0, 0.75)) !important;
+}
+
+/* Info line: year, rating, runtime, age rating */
+#slides-container .info-container,
+#slides-container .misc-info {
+  font-size: 1.05em;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+#slides-container .age-rating {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  border-radius: 6px !important;
+  font-weight: 700;
+}
+#slides-container .separator-icon {
+  color: var(--noc-accent) !important;
+}
+
+/* Genres */
+#slides-container .genre {
+  color: rgba(230, 233, 242, 0.85) !important;
+  font-weight: 500;
+}
+
+/* Description */
+#slides-container .plot {
+  font-size: 1.08em;
+  line-height: 1.55;
+  color: rgba(230, 233, 242, 0.92);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Buttons: blue "Play" pill + round glass buttons (same as the movie page) */
+#slides-container .button-container {
+  margin-top: 1rem !important;
+}
+/* Space between the buttons. The plugin uses "gap", which the desktop app's
+   older browser engine ignores, so margins are used instead. */
+#slides-container .button-container > * {
+  margin-right: 14px !important;
+}
+#slides-container .button-container > *:last-child {
+  margin-right: 0 !important;
+}
+#slides-container .play-button {
+  height: 3.2em !important;
+  padding: 0 2em 0 1.5em !important;
+  border-radius: 999px !important;
+  background: var(--noc-accent) !important;
+  color: var(--noc-bg) !important;
+  font-family: var(--noc-font) !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;            /* glows get clipped into squares here */
+  transition: background 0.15s ease, transform 0.15s ease !important;
+}
+/* Hover changes color instead of growing (growing gets cut off by the banner) */
+#slides-container .play-button:hover {
+  background: #7dd6ff !important;
+  transform: none !important;
+}
+#slides-container .detail-button,
+#slides-container .favorite-button {
+  width: 3.2em !important;
+  height: 3.2em !important;
+  background: rgba(20, 24, 38, 0.7) !important;
+  border: 2px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: none !important;
+  /* the plugin's blur is drawn as a square in the desktop app: remove it */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease !important;
+}
+#slides-container .detail-button:hover,
+#slides-container .favorite-button:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: #ffffff !important;
+  transform: none !important;
+}
+#slides-container .favorite-button.favorited {
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.7) !important;
+}
+#slides-container .play-button:focus-visible,
+#slides-container .detail-button:focus-visible,
+#slides-container .favorite-button:focus-visible {
+  outline: 3px solid var(--noc-accent) !important;
+}
+
+/* Slide dots: the current one becomes a blue pill */
+#slides-container .dot {
+  width: 0.55em !important;
+  height: 0.55em !important;
+  background-color: rgba(255, 255, 255, 0.35) !important;
+  border-radius: 999px !important;
+  transition: width 0.35s ease, background-color 0.35s ease !important;
+}
+#slides-container .dot.active {
+  width: 1.8em !important;
+  background: var(--noc-gradient) !important;
+  transform: none !important;
+}
+
+/* Arrows */
+#slides-container .arrow {
+  width: 2.6rem !important;
+  height: 2.6rem !important;
+  border-radius: 50% !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(15, 19, 32, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+#slides-container .arrow:hover {
+  background: var(--noc-accent) !important;
+  border-color: transparent !important;
+  color: var(--noc-bg) !important;
+}
+
+/* The Media Bar's own settings panel */
+.ss-settings {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.14), transparent 45%),
+    rgba(15, 19, 32, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 20px !important;
+  font-family: var(--noc-font) !important;
+}
+
+
+/* ===== 14. Mobile ===== */
+@media (max-width: 600px) {
+  #loginPage > div,
+  #selectServerPage > div,
+  .standalonePage:not(.wizardPage) > div {
+    margin: 1em !important;
+    padding: 2.2em 1.5em 1.8em !important;
+  }
+}
+
+
+/* ===== 14b. TV (LG webOS, Samsung Tizen) ===== */
+/* Jellyfin adds the .layout-tv class when running in TV mode */
+
+/* Lighter effects so weak TV chips stay smooth */
+.layout-tv #loginPage::before,
+.layout-tv #selectServerPage::before,
+.layout-tv .standalonePage:not(.wizardPage)::before {
+  filter: brightness(0.45);            /* no blur on TV */
+}
+.layout-tv #loginPage > div,
+.layout-tv #selectServerPage > div,
+.layout-tv .standalonePage:not(.wizardPage) > div {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(15, 19, 32, 0.92) !important;
+  max-width: 560px;                    /* a bit bigger for couch distance */
+  font-size: 1.1em;
+}
+
+/* Clear focus ring for the remote */
+.layout-tv #loginPage .emby-input:focus,
+.layout-tv .addServerForm .emby-input:focus {
+  box-shadow: 0 0 0 4px var(--noc-accent) !important;
+}
+.layout-tv #loginPage .emby-button:focus,
+.layout-tv .addServerForm .emby-button:focus {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 3px var(--noc-accent), 0 8px 30px var(--noc-accent-glow) !important;
+  color: var(--noc-text) !important;
+}
+.layout-tv #selectServerPage .card:focus .cardBox {
+  transform: none !important;
+  border-color: var(--noc-accent);
+  box-shadow: 0 0 0 3px var(--noc-accent), 0 12px 34px var(--noc-accent-glow);
+}
